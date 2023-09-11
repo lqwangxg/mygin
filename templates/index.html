@@ -1,0 +1,81 @@
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Regex Match Content By Pattern</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>jQuery UI Tabs - Default functionality</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script>
+        $(function () {
+            $("#tabs").tabs();
+        });
+    </script>
+    <style type="text/css" media="screen">
+        @import url("/static/css/main.css");
+    </style>
+</head>
+
+<body>
+    <h2 style="color: rebeccapurple;">Regex Match Content by Pattern</h2>
+    <div id="tabs">
+        <ul>
+            <li><a href="#tabs-1">Regex Match 1 </a></li>
+        </ul>
+        <div id="tabs-1">
+            <form action="match" method="post">
+                <table>
+                    <tr>
+                        <td>
+                            <label for="pattern">Input the Pattern for Regex Match:</label><br>
+                            <textarea type="text" id="pattern" name="pattern" rows="10" cols="80" style="width:100%">{{.Pattern}}</textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="content">Input the Content for Regex Match:</label>
+                            <textarea type="text" id="content" name="content" rows="10" cols="80"
+                                style="width:100%">{{.Content}}</textarea>
+                        </td>
+                    </tr>
+                    {{ if .result }}
+                    {{ if gt .result.MatchCount 0 }}
+                    <tr>
+                        <td>
+                            <div id="match">
+                                <p>Match Count:{{ .result.MatchCount }}</p>
+                                <ol>
+                                    {{ range $index, $element := .result.Captures }}
+                                    <li>
+                                        [{{$element.Start}}:{{$element.End}}]{{$element.Value}}
+                                        {{ if $element.Groups}}
+                                        <div>
+                                            <ol>
+                                                {{ range $gindex, $group := $element.Groups }}
+                                                <li> Group[{{$gindex}}]={{$group.Value}} </li>
+                                                {{end}}
+                                            </ol>
+                                        </div>
+                                        {{end}}
+                                    </li>
+                                    {{end}}
+                                </ol>
+                            </div>
+                        </td>
+                    </tr>
+                    {{ end }}
+                    {{ end }}
+                    <tr>
+                        <td><input type="submit" value="submit"></td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+    
+</body>
+
+</html>

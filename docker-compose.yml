@@ -1,0 +1,6 @@
+version: '3'
+services:
+  app:
+    image: registry.dev.mbpsmartec.co.jp/regexgo:v2
+    ports:
+      - "9005:3000" #
