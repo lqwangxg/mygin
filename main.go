@@ -17,8 +17,13 @@ func main() {
 	engine.POST("/match", controller.Match)
 	engine.GET("/show", controller.Show)
 	engine.GET("/sysdate", controller.SysDate)
-	engine.GET("/query", controller.Exec)
-	engine.POST("/query", controller.Exec)
+	engine.GET("/exec", controller.Exec)
+	engine.POST("/exec", controller.Exec)
+	engine.GET("/getvalue", controller.QueryValue)
+	engine.POST("/getvalue", controller.QueryValue)
+	engine.GET("/gettable", controller.QueryTable)
+	engine.POST("/gettable", controller.QueryTable)
+
 	//-------------------------------------------
 
 	engine.Run(":3000")

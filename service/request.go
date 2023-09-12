@@ -10,7 +10,7 @@ type DBRequest struct {
 	Schema string   `form:"schema"`
 	Sql    string   `form:"sql"`
 	Sqls   []string `form:"sqls[]"`
-	Trans  bool     `form:"transaction"`
+	Trans  bool     `form:"trans"`
 }
 
 // ===============================================

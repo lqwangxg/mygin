@@ -16,12 +16,15 @@ type DataTable struct {
 type DataRow []interface{}
 
 type DataColumn struct {
-	Index    int
-	Name     string
-	Type     string
-	Length   int64
-	ScanType string
-	Comment  string
+	Index     int
+	Name      string
+	Type      string
+	Length    int64
+	ScanType  string
+	Comment   string
+	Nullable  bool
+	Precision int64
+	Scale     int64
 }
 
 func NewDataTable() *DataTable {
@@ -74,9 +77,13 @@ func (dt *DataTable) InitColumns(columns []string, colTypes []*sql.ColumnType) {
 		dt.Columns[idx].Index = idx
 		dt.Columns[idx].Name = name
 		ctype := colTypes[idx]
-		dt.Columns[idx].Type = ctype.Name()
+		dt.Columns[idx].Type = ctype.DatabaseTypeName()
 		if length, ok := ctype.Length(); ok {
 			dt.Columns[idx].Length = length
+		}
+		if prec, scale, ok := ctype.DecimalSize(); ok {
+			dt.Columns[idx].Precision = prec
+			dt.Columns[idx].Scale = scale
 		}
 	}
 }
