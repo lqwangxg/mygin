@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
 	"strings"
 
 	go_ora "github.com/sijms/go-ora/v2"
@@ -103,7 +104,7 @@ func (di *DBConnectInfo) query(sql string) *ExecResult {
 
 // =============================================
 // public methods
-func (di *DBConnectInfo) ExecBatch(req *DBRequest) *[]ExecResult {
+func (di *DBConnectInfo) ExecBatch(sqls []*SqlIndex, trans bool) *[]ExecResult {
 	db, err := di.Open()
 	results := make([]ExecResult, 0)
 	if err != nil {
@@ -116,7 +117,7 @@ func (di *DBConnectInfo) ExecBatch(req *DBRequest) *[]ExecResult {
 
 	//=============================================
 	var tx *sql.Tx
-	if req.Trans {
+	if trans {
 		tx, err = db.BeginTx(context.Background(), nil)
 		if err != nil {
 			result := &ExecResult{}
@@ -127,13 +128,14 @@ func (di *DBConnectInfo) ExecBatch(req *DBRequest) *[]ExecResult {
 		defer tx.Rollback()
 	}
 
+	sort.SliceStable(sqls, func(i, j int) bool { return sqls[i].Index < sqls[j].Index })
 	//=============================================
-	for _, sql := range req.Sqls {
-		result := di.batch(sql)
+	for _, sql := range sqls {
+		result := di.batch(sql.Sql)
 		results = append(results, *result)
 	}
 	//=============================================
-	if req.Trans && tx != nil {
+	if trans && tx != nil {
 		tx.Commit()
 	}
 	return &results

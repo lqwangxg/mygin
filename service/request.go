@@ -12,6 +12,10 @@ type DBRequest struct {
 	Sqls   []string `form:"sqls[]"`
 	Trans  bool     `form:"trans"`
 }
+type SqlIndex struct {
+	Index int
+	Sql   string
+}
 
 // // ===============================================
 // // ===============================================

@@ -3,6 +3,8 @@ package controller
 import (
 	"mygin/service"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,18 +54,27 @@ func SysDate(c *gin.Context) {
 func Exec(c *gin.Context) {
 	var request service.DBRequest
 	c.Bind(&request)
-
+	sqls := make([]*service.SqlIndex, 0)
 	if request.Sql != "" {
-		request.Sqls = append(request.Sqls, request.Sql)
+		sqlindex := &service.SqlIndex{Index: 0, Sql: request.Sql}
+		//request.Sqls = append(request.Sqls, request.Sql)
+		sqls = append(sqls, sqlindex)
 	}
 	paramPairs := c.Request.URL.Query()
+	// sort.SliceStable(paramPairs, func(i, j int) bool {
+	// 	return paramPairs[i].key < paramPairs[j]
+	// })
+
 	for key, values := range paramPairs {
-		if service.NewRegexText(`sql\w+`, key).IsMatch() {
-			request.Sqls = append(request.Sqls, values[0])
+		if service.NewRegexText(`sql\d+`, key).IsMatch() && values[0] != "" {
+			sidx := strings.Replace(key, "sql", "", -1)
+			idx, _ := strconv.Atoi(sidx)
+			sqlindex := &service.SqlIndex{Index: idx, Sql: values[0]}
+			sqls = append(sqls, sqlindex)
 		}
 	}
 	db := service.NewConnection(&request)
-	result := db.ExecBatch(&request)
+	result := db.ExecBatch(sqls, request.Trans)
 	c.IndentedJSON(http.StatusOK, result)
 }
 
