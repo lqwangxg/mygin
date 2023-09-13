@@ -12,6 +12,14 @@ type DataTable struct {
 	RowCount int
 	Comment  string
 	Owner    string
+	Error    string
+}
+type ExecResult struct {
+	Count int64
+	Sql   string
+	DataTable
+	Error   string
+	IsQuery bool
 }
 type DataRow []interface{}
 
@@ -59,6 +67,7 @@ func (dataTable *DataTable) Fill(db *sql.DB, strSQL string) (*DataTable, error) 
 		return dataTable, err
 	}
 	dataTable.InitColumns(cols, colTypes)
+	//dataTable.Sql = strSQL
 	for rs.Next() {
 		address := dataTable.NewRow()
 		if err := rs.Scan(address...); err != nil {

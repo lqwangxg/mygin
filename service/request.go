@@ -13,11 +13,12 @@ type DBRequest struct {
 	Trans  bool     `form:"trans"`
 }
 
-// ===============================================
-// ===============================================
-// public methods
-func (req *DBRequest) Exec() *DataSet {
-	ds := NewDataSet()
-	ds.Exec(req)
-	return ds
-}
+// // ===============================================
+// // ===============================================
+// // public methods
+// func (req *DBRequest) Exec() *DataSet {
+
+// 	ds := NewDataSet()
+// 	ds.Exec(req)
+// 	return ds
+// }

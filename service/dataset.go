@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"database/sql"
 	"strings"
 )
@@ -31,12 +30,13 @@ func (ds *DataSet) batch(db *sql.DB, sql string) {
 }
 func (ds *DataSet) query(db *sql.DB, sql string) {
 	dt := NewDataTable()
-	if dt, err := dt.Fill(db, sql); err == nil {
-		*ds.Results = append(*ds.Results, *dt)
-	} else {
-		*ds.Results = append(*ds.Results, err.Error())
+	dt, err := dt.Fill(db, sql)
+	if err != nil {
+		dt.Error = err.Error()
 	}
+	*ds.Results = append(*ds.Results, *dt)
 }
+
 func (ds *DataSet) exec(db *sql.DB, sql string) {
 	//====================================
 	var count int64
@@ -53,33 +53,33 @@ func (ds *DataSet) exec(db *sql.DB, sql string) {
 	}
 }
 
-// =============================================
-// public methods
-func (ds *DataSet) Exec(req *DBRequest) {
-	di := NewConnection(req)
-	db, err := di.Open()
-	if err != nil {
-		*ds.Results = append(*ds.Results, err.Error())
-		return
-	}
-	defer db.Close()
-	//=============================================
-	var tx *sql.Tx
-	if req.Trans {
-		tx, err = db.BeginTx(context.Background(), nil)
-		if err != nil {
-			*ds.Results = append(*ds.Results, err.Error())
-			return
-		}
-		defer tx.Rollback()
-	}
-	//=============================================
-	ds.batch(db, req.Sql)
-	for _, sql := range req.Sqls {
-		ds.batch(db, sql)
-	}
-	//=============================================
-	if req.Trans && tx != nil {
-		tx.Commit()
-	}
-}
+// // =============================================
+// // public methods
+// func (ds *DataSet) Exec(req *DBRequest) {
+// 	di := NewConnection(req)
+// 	db, err := di.Open()
+// 	if err != nil {
+// 		*ds.Results = append(*ds.Results, err.Error())
+// 		return
+// 	}
+// 	defer db.Close()
+// 	//=============================================
+// 	var tx *sql.Tx
+// 	if req.Trans {
+// 		tx, err = db.BeginTx(context.Background(), nil)
+// 		if err != nil {
+// 			*ds.Results = append(*ds.Results, err.Error())
+// 			return
+// 		}
+// 		defer tx.Rollback()
+// 	}
+// 	//=============================================
+// 	ds.batch(db, req.Sql)
+// 	for _, sql := range req.Sqls {
+// 		ds.batch(db, sql)
+// 	}
+// 	//=============================================
+// 	if req.Trans && tx != nil {
+// 		tx.Commit()
+// 	}
+// }

@@ -1,8 +1,10 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	go_ora "github.com/sijms/go-ora/v2"
 )
@@ -60,9 +62,10 @@ func (di *DBConnectInfo) QueryTable(strSQL string) (*DataTable, error) {
 
 // ===============================================
 // public methods
-func (di *DBConnectInfo) Exec(strSQL string) (int64, error) {
+func (di *DBConnectInfo) Exec(strSQL string) *ExecResult {
 	//====================================
 	var count int64
+	result := &ExecResult{Sql: strSQL}
 	if res, err := di.db.Exec(strSQL); err == nil {
 		if i, err := res.LastInsertId(); err == nil {
 			count = count + i
@@ -70,8 +73,68 @@ func (di *DBConnectInfo) Exec(strSQL string) (int64, error) {
 		if i, err := res.RowsAffected(); err == nil {
 			count = count + i
 		}
-		return count, nil
+		result.Count = count
 	} else {
-		return count, err
+		result.Error = err.Error()
 	}
+	return result
+}
+
+func (di *DBConnectInfo) batch(sql string) *ExecResult {
+	if strings.TrimSpace(sql) == "" {
+		return nil
+	}
+
+	rs := NewRegexText(PATTERN_SQL_SELECT, sql)
+	if rs.IsMatch() {
+		return di.query(sql)
+	} else {
+		return di.Exec(sql)
+	}
+}
+func (di *DBConnectInfo) query(sql string) *ExecResult {
+	result := &ExecResult{DataTable: *NewDataTable(), Sql: sql, IsQuery: true}
+	dt, err := result.DataTable.Fill(di.db, sql)
+	if err != nil {
+		dt.Error = err.Error()
+	}
+	return result
+}
+
+// =============================================
+// public methods
+func (di *DBConnectInfo) ExecBatch(req *DBRequest) *[]ExecResult {
+	db, err := di.Open()
+	results := make([]ExecResult, 0)
+	if err != nil {
+		result := &ExecResult{}
+		result.Error = err.Error()
+		results = append(results, *result)
+		return &results
+	}
+	defer db.Close()
+
+	//=============================================
+	var tx *sql.Tx
+	if req.Trans {
+		tx, err = db.BeginTx(context.Background(), nil)
+		if err != nil {
+			result := &ExecResult{}
+			result.Error = err.Error()
+			results = append(results, *result)
+			return &results
+		}
+		defer tx.Rollback()
+	}
+
+	//=============================================
+	for _, sql := range req.Sqls {
+		result := di.batch(sql)
+		results = append(results, *result)
+	}
+	//=============================================
+	if req.Trans && tx != nil {
+		tx.Commit()
+	}
+	return &results
 }

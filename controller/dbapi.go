@@ -52,13 +52,18 @@ func SysDate(c *gin.Context) {
 func Exec(c *gin.Context) {
 	var request service.DBRequest
 	c.Bind(&request)
+
+	if request.Sql != "" {
+		request.Sqls = append(request.Sqls, request.Sql)
+	}
 	paramPairs := c.Request.URL.Query()
 	for key, values := range paramPairs {
 		if service.NewRegexText(`sql\w+`, key).IsMatch() {
 			request.Sqls = append(request.Sqls, values[0])
 		}
 	}
-	result := request.Exec()
+	db := service.NewConnection(&request)
+	result := db.ExecBatch(&request)
 	c.IndentedJSON(http.StatusOK, result)
 }
 
